@@ -134,6 +134,14 @@
       hoverBackground() {
         return this.backgroundColor ? this.mixColor(this.backgroundColor, 0.2) : '';
       },
+      backgroundColorPre() {
+        if (!this.backgroundColor)
+          return '';
+        let { red, green, blue, alpha } = this.getColorChannels(this.backgroundColor);
+        if (alpha < 1.0) 
+          alpha = 0;
+        return `rgb(${ Math.round(red) }, ${ Math.round(green) }, ${ Math.round(blue) }, ${ alpha })`;
+      },
       isMenuPopup() {
         return this.mode === 'horizontal' || (this.mode === 'vertical' && this.collapse);
       }
@@ -177,39 +185,57 @@
       },
       getColorChannels(color) {
         color = color.replace('#', '');
-        if (/^[0-9a-fA-F]{3}$/.test(color)) {
+        if (/^[0-9a-fA-F]{3}$/.test(color)) { //#rgb
           color = color.split('');
           for (let i = 2; i >= 0; i--) {
             color.splice(i, 0, color[i]);
           }
           color = color.join('');
         }
-        if (/^[0-9a-fA-F]{6}$/.test(color)) {
+        if (/^[0-9a-fA-F]{4}$/.test(color)) { //#rgba
+          color = color.split('');
+          for (let i = 3; i >= 0; i--) {
+            color.splice(i, 0, color[i]);
+          }
+          color = color.join('');
+        }
+        if (/^[0-9a-fA-F]{6}$/.test(color)) { //#rrggbb
           return {
             red: parseInt(color.slice(0, 2), 16),
             green: parseInt(color.slice(2, 4), 16),
-            blue: parseInt(color.slice(4, 6), 16)
+            blue: parseInt(color.slice(4, 6), 16),
+            alpha: 1.0
           };
-        } else {
+        }else if (/^[0-9a-fA-F]{8}$/.test(color)) { //#rrggbbaa
+          return {
+            red: parseInt(color.slice(0, 2), 16),
+            green: parseInt(color.slice(2, 4), 16),
+            blue: parseInt(color.slice(4, 6), 16),
+            alpha: parseInt(color.slice(6, 8), 16) / 0xff
+          };
+        }else {
           return {
             red: 255,
             green: 255,
-            blue: 255
+            blue: 255,
+            alpha: 1.0
           };
         }
       },
       mixColor(color, percent) {
-        let { red, green, blue } = this.getColorChannels(color);
+        let { red, green, blue, alpha } = this.getColorChannels(color);
         if (percent > 0) { // shade given color
           red *= 1 - percent;
           green *= 1 - percent;
           blue *= 1 - percent;
+          alpha = alpha < 1.0 ? percent : alpha;
         } else { // tint given color
           red += (255 - red) * percent;
           green += (255 - green) * percent;
           blue += (255 - blue) * percent;
+          alpha += alpha < 1.0 ? percent : alpha;
         }
-        return `rgb(${ Math.round(red) }, ${ Math.round(green) }, ${ Math.round(blue) })`;
+        return `rgb(${ Math.round(red) }, ${ Math.round(green) }, ${ Math.round(blue) }, ${ alpha })`;
       },
       addItem(item) {
         this.$set(this.items, item.index, item);

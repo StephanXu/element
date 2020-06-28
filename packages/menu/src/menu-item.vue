@@ -58,7 +58,7 @@
         return this.rootMenu.hoverBackground;
       },
       backgroundColor() {
-        return this.rootMenu.backgroundColor || '';
+        return this.rootMenu.backgroundColorPre;
       },
       activeTextColor() {
         return this.rootMenu.activeTextColor || '';
